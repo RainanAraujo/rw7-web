@@ -1,14 +1,18 @@
 import { useRef, useState } from 'react'
 import { gsap, useGSAP, prefersReducedMotion, lockScroll } from '../lib/motion'
 
+const COUNT = [7, 6, 5, 4, 3, 2, 1]
+const STEP = 0.15
+const COUNT_DURATION = STEP * COUNT.length
+
 /**
- * Contagem regressiva estilo "film leader" (3, 2, 1) antes do site abrir.
+ * Contagem regressiva estilo "film leader" (7 → 1, de rw7) antes do site abrir.
  * - onReveal: dispara quando a cortina COMEÇA a abrir (hero anima junto)
  * - onDone: dispara quando terminou (preloader sai do DOM)
  */
 export function Preloader({ onReveal, onDone }: { onReveal: () => void; onDone: () => void }) {
   const ref = useRef<HTMLDivElement>(null)
-  const [n, setN] = useState(3)
+  const [n, setN] = useState(COUNT[0])
 
   useGSAP(
     () => {
@@ -25,9 +29,10 @@ export function Preloader({ onReveal, onDone }: { onReveal: () => void; onDone: 
           onDone()
         },
       })
-      ;[3, 2, 1].forEach((num) => {
-        tl.call(() => setN(num))
-        tl.fromTo(sweep, { '--a': '0deg' }, { '--a': '360deg', duration: 0.62, ease: 'none' })
+      // uma volta só do ponteiro para a contagem toda (uma por número, nessa velocidade, piscaria)
+      tl.fromTo(sweep, { '--a': '0deg' }, { '--a': '360deg', duration: COUNT_DURATION, ease: 'none' }, 0)
+      COUNT.slice(1).forEach((num, i) => {
+        tl.call(() => setN(num), undefined, STEP * (i + 1))
       })
       tl.to('.leader__inner', { opacity: 0, duration: 0.15 })
         .fromTo('.leader__logo', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.7, ease: 'power3.out' })
